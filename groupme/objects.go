@@ -1,10 +1,12 @@
 package groupme
 
-import "fmt"
+import (
+	"unicode"
+)
 
 type Post struct {
 	BotId string `json:"bot_id"`
-	Test  string `json:"text"`
+	Text  string `json:"text"`
 }
 
 /*
@@ -31,10 +33,6 @@ const (
 	BotSender  SenderType = "bot"
 )
 
-const (
-	url string = "https://api.groupme.com/v3/groups/%d/messages?token=%s"
-)
-
 type Message struct {
 	CreatedAt  int        `json:"created_at"`
 	GroupId    int        `json:"group_id"`
@@ -48,6 +46,46 @@ type Message struct {
 	UserId     int        `json:"user_id"`
 }
 
-func (m *Message) URL(token string) string {
-	return fmt.Sprintf(url, m.GroupId, token)
+type BotCommand interface {
+	GetResponse(botId string) *Post
 }
+
+type lastMessageCommand struct {
+	m *Message
+
+}
+
+func (c *lastMessageCommand) GetResponse(botId string) *Post {
+	return nil // TODO
+}
+
+type thisMessageCommand struct {
+	m *Message
+	parsedText string
+}
+func (c *thisMessageCommand) GetResponse(botId string) *Post {
+	return &Post{botId, translateText(c.parsedText)}
+}
+
+func (m *Message) ParseCommand() (BotCommand, error) {
+	return &thisMessageCommand{}, nil
+}
+
+func translateText(text string) string {
+	ret := []rune{}
+	i := false
+	for _, r := range text {
+		if i {
+			ret = append(ret, unicode.ToUpper(r))
+		} else {
+			ret = append(ret, unicode.ToLower(r))
+		}
+
+		if r != ' ' {
+			i = !i
+		}
+	}
+
+	return string(ret)
+}
+

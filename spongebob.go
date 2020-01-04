@@ -14,11 +14,17 @@ import (
 	"strings"
 )
 
-var errorLogger = log.New(os.Stderr, "ERROR ", log.Llongfile)
-var accessToken string
+const url string = "https://api.groupme.com/v3/bots/post"
+
+var (
+	errorLogger = log.New(os.Stderr, "ERROR ", log.Llongfile)
+	accessToken string
+	botId       string
+)
 
 func init() {
 	accessToken = os.Getenv("GROUPME_ACCESS_TOKEN")
+	botId = os.Getenv("GROUPME_BOT_ID")
 }
 
 func main() {
@@ -41,7 +47,7 @@ func spongebobify(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResp
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusOK}, nil
 	}
 
-	err = postMessage(m.URL(accessToken), p)
+	err = postMessage(p)
 	if err != nil {
 		return serverError(err)
 	}
@@ -49,7 +55,7 @@ func spongebobify(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResp
 	return events.APIGatewayProxyResponse{StatusCode: http.StatusOK}, nil
 }
 
-func postMessage(url string, p *groupme.Post) error {
+func postMessage(p *groupme.Post) error {
 	js, err := json.Marshal(p)
 	if err != nil {
 		return err
@@ -67,7 +73,7 @@ func postMessage(url string, p *groupme.Post) error {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated {
 		msg := fmt.Sprintf("Non 200 response code: %v\n", resp)
 		return errors.New(msg)
 	}
@@ -85,6 +91,11 @@ func processMessage(m *groupme.Message) (*groupme.Post, error) {
 		msg := fmt.Sprintf("Unrelated message, ignoring: %v\n", m)
 		return nil, errors.New(msg)
 	}
+
+	return &groupme.Post{
+		BotId: botId,
+		Text:  "test response message",
+	}, nil
 }
 
 func serverError(err error) (events.APIGatewayProxyResponse, error) {
