@@ -92,10 +92,12 @@ func processMessage(m *groupme.Message) (*groupme.Post, error) {
 		return nil, errors.New(msg)
 	}
 
-	return &groupme.Post{
-		BotId: botId,
-		Text:  "test response message",
-	}, nil
+	cmd, err := m.ParseCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	return cmd.CreatePost(botId), nil
 }
 
 func serverError(err error) (events.APIGatewayProxyResponse, error) {

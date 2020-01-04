@@ -47,7 +47,7 @@ type Message struct {
 }
 
 type BotCommand interface {
-	GetResponse(botId string) *Post
+	CreatePost(botId string) *Post
 }
 
 type lastMessageCommand struct {
@@ -55,7 +55,7 @@ type lastMessageCommand struct {
 
 }
 
-func (c *lastMessageCommand) GetResponse(botId string) *Post {
+func (c *lastMessageCommand) CreatePost(botId string) *Post {
 	return nil // TODO
 }
 
@@ -63,7 +63,7 @@ type thisMessageCommand struct {
 	m *Message
 	parsedText string
 }
-func (c *thisMessageCommand) GetResponse(botId string) *Post {
+func (c *thisMessageCommand) CreatePost(botId string) *Post {
 	return &Post{botId, translateText(c.parsedText)}
 }
 
