@@ -2,9 +2,10 @@ package spongebob
 
 import (
 	"fmt"
-	"github.com/dyolcekaj/groupme-spongebob-bot/groupme"
 	"regexp"
 	"unicode"
+
+	"github.com/dyolcekaj/groupme-spongebob-bot/groupme"
 )
 
 var okPrefixRxp = *regexp.MustCompile("ok (.*)")
@@ -22,7 +23,7 @@ func (c *CurrentMessageSarcasm) Matches(msg groupme.Message) bool {
 	return okPrefixRxp.Match([]byte(msg.Text)) && len(msg.Attachments) == 0
 }
 
-func (c *CurrentMessageSarcasm) Execute(msg groupme.Message, client *groupme.Client) error {
+func (c *CurrentMessageSarcasm) Execute(msg groupme.Message, client groupme.Client) error {
 	return client.PostBotMessage(translateText(okPrefixRxp.FindStringSubmatch(msg.Text)[1]))
 }
 
@@ -50,7 +51,7 @@ func (c *LastMessageSarcasm) Matches(msg groupme.Message) bool {
 	return false
 }
 
-func (c *LastMessageSarcasm) Execute(msg groupme.Message, client *groupme.Client) error {
+func (c *LastMessageSarcasm) Execute(msg groupme.Message, client groupme.Client) error {
 	var uid string
 	for _, a := range msg.Attachments {
 		if a.Type == groupme.MentionType {
@@ -70,31 +71,16 @@ func (c *LastMessageSarcasm) Execute(msg groupme.Message, client *groupme.Client
 		return err
 	}
 
-	// Messages are sorted in descending time
+	// Messages are sorted in descending time, don't need to sort
+	// Can worry about fetching more messages when not found later, 100 should
+	// be enough
 	for _, m := range ms {
-		if hasUserMention(uid, m) {
+		if m.SenderId == uid {
 			return client.PostBotMessage(translateText(m.Text))
 		}
 	}
 
 	return fmt.Errorf("no messages found for uid: %s", uid)
-}
-
-func hasUserMention(uid string, msg *groupme.Message) bool {
-	if len(msg.Attachments) == 0 {
-		return false
-	}
-
-	for _, a := range msg.Attachments {
-		if a.Type == groupme.MentionType {
-			for _, u := range a.UserIds {
-				if u == uid {
-					return true
-				}
-			}
-		}
-	}
-	return false
 }
 
 func translateText(text string) string {
