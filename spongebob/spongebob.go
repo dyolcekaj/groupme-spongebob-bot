@@ -2,8 +2,11 @@ package spongebob
 
 import (
 	"github.com/dyolcekaj/groupme-spongebob-bot/groupme"
+	"regexp"
 	"unicode"
 )
+
+var ptsRxp = *regexp.MustCompile("ok (.*)")
 
 var _ groupme.Command = &PlainTextSarcasm{}
 type PlainTextSarcasm struct {
@@ -15,7 +18,7 @@ func (c *PlainTextSarcasm) Name() string {
 }
 
 func (c *PlainTextSarcasm) Matches(text string) bool {
-	return false
+	return ptsRxp.Match([]byte(text))
 }
 
 func (c *PlainTextSarcasm) Execute(msg groupme.Message, client *groupme.Client) error {

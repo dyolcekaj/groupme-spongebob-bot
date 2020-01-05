@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	objects "github.com/dyolcekaj/groupme-spongebob-bot/groupme/internal"
 	"net/http"
 )
 
@@ -16,8 +15,13 @@ type Client struct {
 	BaseUrl string
 }
 
+type botPost struct {
+	BotId string `json:"bot_id"`
+	Text  string `json:"text"`
+}
+
 func (c *Client) PostBotMessage(text string) error {
-	p := &objects.Post{
+	p := &botPost{
 		BotId: c.BotId,
 		Text:  text,
 	}
@@ -27,7 +31,7 @@ func (c *Client) PostBotMessage(text string) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", c.BaseUrl + "/bots/post", bytes.NewBuffer(js))
+	req, err := http.NewRequest("POST", c.BaseUrl+"/bots/post", bytes.NewBuffer(js))
 	if err != nil {
 		return err
 	}
