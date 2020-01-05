@@ -12,15 +12,14 @@ import (
 	"os"
 )
 
-func main() {
-	l := log.New()
-	l.SetLevel(log.DebugLevel)
+var (
+	botName = os.Getenv("GROPUME_BOT_NAME")
+	accessToken = os.Getenv("GROUPME_ACCESS_TOKEN")
+)
 
+func main() {
 	opts := groupme.CommandBotOptions{
-		BotIdFunc:       func() string { return os.Getenv("GROUPME_BOT_ID") },
-		AccessTokenFunc: func() string { return os.Getenv("GROUPME_ACCESS_TOKEN") },
-		Logger:          l,
-		BaseUrl:         groupme.DefaultUrl,
+		AccessToken: accessToken,
 	}
 
 	// Order matters, checked sequentially
@@ -29,7 +28,7 @@ func main() {
 		&spongebob.CurrentMessageSarcasm{},
 	}
 
-	bot, err := groupme.NewCommandBot(opts, cmds...)
+	bot, err := groupme.NewCommandBot(botName, opts, cmds...)
 	if err != nil {
 		panic(err)
 	}
@@ -43,8 +42,6 @@ type App struct {
 }
 
 func (a *App) Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	log.Infof("Got request: %v\n", request)
-	log.Infof("Body: %s\n", request.Body)
 	body := request.Body
 
 	m := groupme.Message{}
@@ -52,8 +49,8 @@ func (a *App) Handler(ctx context.Context, request events.APIGatewayProxyRequest
 	if err != nil {
 		log.Error(err)
 		return events.APIGatewayProxyResponse{
-			StatusCode:        http.StatusInternalServerError,
-			Body:              http.StatusText(http.StatusInternalServerError),
+			StatusCode: http.StatusInternalServerError,
+			Body:       http.StatusText(http.StatusInternalServerError),
 		}, nil
 	}
 
@@ -61,12 +58,12 @@ func (a *App) Handler(ctx context.Context, request events.APIGatewayProxyRequest
 	if err != nil {
 		log.Error(err)
 		return events.APIGatewayProxyResponse{
-			StatusCode:        http.StatusInternalServerError,
-			Body:              http.StatusText(http.StatusInternalServerError),
+			StatusCode: http.StatusInternalServerError,
+			Body:       http.StatusText(http.StatusInternalServerError),
 		}, nil
 	}
 
 	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusOK,
+		StatusCode: http.StatusOK,
 	}, nil
 }
