@@ -9,30 +9,43 @@ import (
 )
 
 type SenderType string
+type AttachmentType string
 
 const (
 	UserSender SenderType = "user"
 	BotSender  SenderType = "bot"
 
+	ImageType    AttachmentType = "image"
+	LocationType AttachmentType = "location"
+	MentionType  AttachmentType = "mention"
+	EmojiType    AttachmentType = "emoji"
+	SplitType    AttachmentType = "split"
+
 	DefaultUrl = "https://api.groupme.com/v3"
 )
 
 type Message struct {
-	CreatedAt  int        `json:"created_at"`
-	GroupId    string     `json:"group_id"`
-	Id         string     `json:"id"`
-	Name       string     `json:"name"`
-	SenderId   string     `json:"sender_id"`
-	SenderType SenderType `json:"sender_type"`
-	SourceGuid string     `json:"source_guid"`
-	System     bool       `json:"system"`
-	Text       string     `json:"text"`
-	UserId     string     `json:"user_id"`
+	Attachments []Attachment `json:"attachments"`
+	CreatedAt   int          `json:"created_at"`
+	GroupId     string       `json:"group_id"`
+	Id          string       `json:"id"`
+	Name        string       `json:"name"`
+	SenderId    string       `json:"sender_id"`
+	SenderType  SenderType   `json:"sender_type"`
+	SourceGuid  string       `json:"source_guid"`
+	System      bool         `json:"system"`
+	Text        string       `json:"text"`
+	UserId      string       `json:"user_id"`
+}
+
+type Attachment struct {
+	Type    AttachmentType `json:"type"`
+	UserIds []string       `json:"user_ids"`
 }
 
 type Command interface {
 	Name() string
-	Matches(text string) bool
+	Matches(msg Message) bool
 	Execute(msg Message, c *Client) error
 }
 
@@ -110,7 +123,7 @@ func (b *bot) handler(msg Message) error {
 	}
 
 	for _, cmd := range b.commands {
-		if cmd.Matches(msg.Text) {
+		if cmd.Matches(msg) {
 			b.logger.Infof("Found command '%s', executing command on msg: %s\n", cmd.Name(), msgText)
 
 			c := &Client{
