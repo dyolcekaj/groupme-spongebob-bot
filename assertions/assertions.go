@@ -3,8 +3,8 @@ package assertions
 import (
 	"fmt"
 	"path/filepath"
-	"runtime"
 	"reflect"
+	"runtime"
 	"testing"
 )
 

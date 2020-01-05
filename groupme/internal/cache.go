@@ -2,7 +2,6 @@ package internal
 
 import (
 	"sync"
-	"time"
 )
 
 type BotIdCache interface {
@@ -44,7 +43,6 @@ func (c *simpleMapCache) Clear() {
 
 type simpleMapCache struct {
 	baseUrl string
-	ttl     time.Duration
 
 	entries map[string]string
 	mutex   *sync.RWMutex
