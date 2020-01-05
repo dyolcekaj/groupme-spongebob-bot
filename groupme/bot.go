@@ -2,6 +2,7 @@ package groupme
 
 import (
 	"errors"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
@@ -95,19 +96,22 @@ func (b *bot) Handler() func(msg Message) error {
 }
 
 func (b *bot) handler(msg Message) error {
+	msgText := fmt.Sprintf("%v", msg)
+	b.logger.Debugf("Received message: %s\n", msgText)
+
 	if msg.SenderType != UserSender {
-		b.logger.Debugf("User did not post message, ignoring: %v\n", msg)
+		b.logger.Debugf("User did not post message, ignoring: %s\n", msgText)
 		return nil
 	}
 
 	if len(msg.Text) <= 0 {
-		b.logger.Debugf("We don't know how to handle empty messages yet: %v\n", msg)
+		b.logger.Debugf("We don't know how to handle empty messages yet: %s\n", msgText)
 		return nil
 	}
 
 	for _, cmd := range b.commands {
 		if cmd.Matches(msg.Text) {
-			b.logger.Infof("Found command '%s', executing command on msg: %v\n", cmd.Name(), msg)
+			b.logger.Infof("Found command '%s', executing command on msg: %s\n", cmd.Name(), msgText)
 
 			c := &Client{
 				c:           &http.Client{},
@@ -120,6 +124,6 @@ func (b *bot) handler(msg Message) error {
 		}
 	}
 
-	b.logger.Debugf("No command found for message: %v\n", msg)
+	b.logger.Debugf("No command found for message: %s\n", msgText)
 	return nil
 }
