@@ -11,7 +11,7 @@ func TestTranslateText(t *testing.T) {
 }
 
 func TestPlainTextSarcasm_Matches(t *testing.T) {
-	pts := &PlainTextSarcasm{}
+	pts := &CurrentMessageSarcasm{}
 	assertions.Assert(t, pts.Matches("ok this should match"), "Should have matched")
 	assertions.Assert(t, !pts.Matches("this should not match"), "Should not have matched")
 }

@@ -26,7 +26,7 @@ func main() {
 	// Order matters, checked sequentially
 	cmds := []groupme.Command{
 		&spongebob.LastMessageSarcasm{},
-		&spongebob.PlainTextSarcasm{},
+		&spongebob.CurrentMessageSarcasm{},
 	}
 
 	bot, err := groupme.NewCommandBot(opts, cmds...)
