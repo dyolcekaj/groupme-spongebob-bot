@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 	"strings"
 )
 
@@ -17,7 +16,7 @@ const (
 
 	ImageType    AttachmentType = "image"
 	LocationType AttachmentType = "location"
-	MentionType  AttachmentType = "mention"
+	MentionType  AttachmentType = "mentions"
 	EmojiType    AttachmentType = "emoji"
 	SplitType    AttachmentType = "split"
 
@@ -46,7 +45,7 @@ type Attachment struct {
 type Command interface {
 	Name() string
 	Matches(msg Message) bool
-	Execute(msg Message, c *Client) error
+	Execute(msg Message, c Client) error
 }
 
 type CommandBot interface {
@@ -77,6 +76,8 @@ func NewCommandBot(opts CommandBotOptions, cmds ...Command) (CommandBot, error) 
 		b.accessTokenFunc = func() string { return opts.AccessToken }
 	} else if opts.AccessTokenFunc != nil {
 		b.accessTokenFunc = opts.AccessTokenFunc
+	} else {
+		b.accessTokenFunc = func() string { return "" }
 	}
 
 	if opts.Logger != nil {
@@ -126,13 +127,7 @@ func (b *bot) handler(msg Message) error {
 		if cmd.Matches(msg) {
 			b.logger.Infof("Found command '%s', executing command on msg: %s\n", cmd.Name(), msgText)
 
-			c := &Client{
-				c:           &http.Client{},
-				BotId:       b.botIdFunc(),
-				AccessToken: b.accessTokenFunc(),
-				BaseUrl:     b.url,
-			}
-
+			c := NewClientWithToken(b.botIdFunc(), b.url, b.accessTokenFunc())
 			return cmd.Execute(msg, c)
 		}
 	}

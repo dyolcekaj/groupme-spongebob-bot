@@ -5,14 +5,49 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
-type Client struct {
-	c           *http.Client
-	BotId       string
-	AccessToken string
+type Client interface {
+	BotId() string
+	AccessToken() string
 
-	BaseUrl string
+	PostBotMessage(text string) error
+	GetGroupMessages(groupId string, params GroupMessageParams) ([]Message, error)
+}
+
+type client struct {
+	c           *http.Client
+	botId       string
+	accessToken string
+
+	baseUrl string
+}
+
+func NewClient(botId string, baseUrl string) Client {
+	return &client{
+		c:           &http.Client{},
+		botId:       botId,
+		accessToken: "",
+		baseUrl:     baseUrl,
+	}
+}
+
+func NewClientWithToken(botId string, baseUrl string, accessToken string) Client {
+	return &client{
+		c:           &http.Client{},
+		botId:       botId,
+		accessToken: accessToken,
+		baseUrl:     baseUrl,
+	}
+}
+
+func (c *client) BotId() string {
+	return c.botId
+}
+
+func (c *client) AccessToken() string {
+	return c.accessToken
 }
 
 type botPost struct {
@@ -20,9 +55,9 @@ type botPost struct {
 	Text  string `json:"text"`
 }
 
-func (c *Client) PostBotMessage(text string) error {
+func (c *client) PostBotMessage(text string) error {
 	p := &botPost{
-		BotId: c.BotId,
+		BotId: c.botId,
 		Text:  text,
 	}
 
@@ -31,7 +66,7 @@ func (c *Client) PostBotMessage(text string) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", c.BaseUrl+"/bots/post", bytes.NewBuffer(js))
+	req, err := http.NewRequest("POST", c.baseUrl+"/bots/post", bytes.NewBuffer(js))
 	if err != nil {
 		return err
 	}
@@ -55,15 +90,22 @@ type GroupMessageParams struct {
 	Limit    int
 }
 
-func (c *Client) GetGroupMessages(groupId string, params GroupMessageParams) ([]*Message, error) {
-	u := fmt.Sprintf("%s/groups/%s/messages", c.BaseUrl, groupId)
+type groupMessageSearchResult struct {
+	Response struct {
+		Count    int       `json:"count"`
+		Messages []Message `json:"messages"`
+	} `json:"response"`
+}
+
+func (c *client) GetGroupMessages(groupId string, params GroupMessageParams) ([]Message, error) {
+	u := fmt.Sprintf("%s/groups/%s/messages", c.baseUrl, groupId)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	q := req.URL.Query()
-	q.Set("token", c.AccessToken)
+	q.Set("token", c.accessToken)
 	if len(params.AfterId) > 0 {
 		q.Set("after_id", params.AfterId)
 	}
@@ -75,9 +117,9 @@ func (c *Client) GetGroupMessages(groupId string, params GroupMessageParams) ([]
 	}
 
 	if params.Limit > 0 {
-		q.Set("limit", string(params.Limit))
+		q.Set("limit", strconv.Itoa(params.Limit))
 	} else {
-		q.Set("limit", string(100))
+		q.Set("limit", strconv.Itoa(100))
 	}
 
 	req.URL.RawQuery = q.Encode()
@@ -87,11 +129,11 @@ func (c *Client) GetGroupMessages(groupId string, params GroupMessageParams) ([]
 	}
 	defer resp.Body.Close()
 
-	var ms []*Message
-	err = json.NewDecoder(resp.Body).Decode(ms)
+	var result groupMessageSearchResult
+	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
 
-	return ms, nil
+	return result.Response.Messages, nil
 }
