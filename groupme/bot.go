@@ -116,7 +116,7 @@ type bot struct {
 }
 
 func (b *bot) Handler(msg Message) error {
-	msgText := fmt.Sprintf("%v", msg)
+	msgText := msg.String()
 	b.logger.Debugf("Received message: %s\n", msgText)
 
 	if msg.SenderType != UserSender {
