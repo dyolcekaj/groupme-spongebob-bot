@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/dyolcekaj/groupme-spongebob-bot/groupme"
-	"github.com/dyolcekaj/groupme-spongebob-bot/spongebob"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/dyolcekaj/groupme-spongebob-bot/groupme"
+	"github.com/dyolcekaj/groupme-spongebob-bot/spongebob"
 )
 
 var (

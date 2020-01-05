@@ -1,9 +1,10 @@
 package spongebob
 
 import (
+	"testing"
+
 	"github.com/dyolcekaj/groupme-spongebob-bot/assertions"
 	"github.com/dyolcekaj/groupme-spongebob-bot/groupme"
-	"testing"
 )
 
 func TestTranslateText(t *testing.T) {
@@ -16,6 +17,9 @@ func TestPlainTextSarcasm_Matches(t *testing.T) {
 
 	assertions.Assert(t, pts.Matches(groupme.Message{Text: "ok this should match"}), "Should have matched")
 	assertions.Assert(t, !pts.Matches(groupme.Message{Text: "this should not match"}), "Should not have matched")
+	assertions.Assert(t, pts.Matches(groupme.Message{Text: "Ok this should match"}), "Should have matched")
+	assertions.Assert(t, pts.Matches(groupme.Message{Text: "OK this should match"}), "Should have matched")
+	assertions.Assert(t, pts.Matches(groupme.Message{Text: "oK this should match"}), "Should have matched")
 }
 
 func TestLastMessageSarcasm_Matches(t *testing.T) {
