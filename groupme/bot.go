@@ -3,6 +3,7 @@ package groupme
 import (
 	"errors"
 	"fmt"
+	"github.com/dyolcekaj/groupme-spongebob-bot/groupme/internal"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
@@ -37,6 +38,13 @@ type Message struct {
 	UserId      string       `json:"user_id"`
 }
 
+func (m *Message) String() string {
+	return fmt.Sprintf(
+		"[createAt: %d, groupId: %s, id: %s, name: %s, senderId: %s, senderType: %s, text: %s, userId: %s]",
+		m.CreatedAt, m.GroupId, m.Id, m.Name, m.SenderId, m.SenderType, m.Text, m.UserId,
+	)
+}
+
 type Attachment struct {
 	Type    AttachmentType `json:"type"`
 	UserIds []string       `json:"user_ids"`
@@ -53,32 +61,24 @@ type CommandBot interface {
 }
 
 type CommandBotOptions struct {
-	BotId           string
-	BotIdFunc       func() string
-	AccessToken     string
-	AccessTokenFunc func() string
-	Logger          *log.Logger
-	BaseUrl         string
+	AccessToken   string
+	Logger        *log.Logger
+	BaseUrl       string
 }
 
-func NewCommandBot(opts CommandBotOptions, cmds ...Command) (CommandBot, error) {
-	b := &bot{}
-
-	if len(opts.BotId) > 0 {
-		b.botIdFunc = func() string { return opts.BotId }
-	} else if opts.BotIdFunc != nil {
-		b.botIdFunc = opts.BotIdFunc
-	} else {
-		return nil, errors.New("bot ID or bot ID func is required")
-	}
+func NewCommandBot(name string, opts CommandBotOptions, cmds ...Command) (CommandBot, error) {
+	b := &bot{name: name}
 
 	if len(opts.AccessToken) > 0 {
-		b.accessTokenFunc = func() string { return opts.AccessToken }
-	} else if opts.AccessTokenFunc != nil {
-		b.accessTokenFunc = opts.AccessTokenFunc
+		b.accessToken = opts.AccessToken
 	} else {
-		b.accessTokenFunc = func() string { return "" }
+		return nil, errors.New("access token is a required opt")
 	}
+
+	if len(cmds) == 0 {
+		return nil, errors.New("no commands provided")
+	}
+	b.commands = cmds
 
 	if opts.Logger != nil {
 		b.logger = opts.Logger
@@ -92,17 +92,27 @@ func NewCommandBot(opts CommandBotOptions, cmds ...Command) (CommandBot, error) 
 		b.url = DefaultUrl
 	}
 
-	b.commands = cmds
+	b.cache = internal.NewCache()
+	b.cacheClient = NewClient("", b.url, b.accessToken)
+
+	err := b.loadCache()
+	if err != nil {
+		return nil, fmt.Errorf("error loading bot ids for botname '%s': %w", name, err)
+	}
+
 	return b, nil
 }
 
 type bot struct {
-	botIdFunc       func() string
-	accessTokenFunc func() string
-	commands        []Command
+	name        string
+	accessToken string
+	commands    []Command
 
 	logger *log.Logger
 	url    string
+
+	cache       internal.BotIdCache
+	cacheClient Client
 }
 
 func (b *bot) Handler(msg Message) error {
@@ -123,11 +133,47 @@ func (b *bot) Handler(msg Message) error {
 		if cmd.Matches(msg) {
 			b.logger.Infof("Found command '%s', executing command on msg: %s\n", cmd.Name(), msgText)
 
-			c := NewClientWithToken(b.botIdFunc(), b.url, b.accessTokenFunc())
+			botId, ok := b.findBotId(msg.GroupId)
+			if !ok {
+				err := fmt.Errorf(
+					"No bot id found for command '%s' and groupd id '%s' on msg: %s\n",
+					cmd.Name(), msg.GroupId, msgText,
+				)
+				b.logger.Error(err)
+				return err
+			}
+
+			c := NewClient(botId, b.url, b.accessToken)
 			return cmd.Execute(msg, c)
 		}
 	}
 
 	b.logger.Debugf("No command found for message: %s\n", msgText)
+	return nil
+}
+
+func (b *bot) findBotId(groupId string) (string, bool) {
+	if botId, ok := b.cache.Get(groupId); ok {
+		return botId, ok
+	}
+
+	// try, try again
+	err := b.loadCache()
+	if err != nil {
+		b.logger.Errorf("error reloading cache: %v", err)
+	}
+	return b.cache.Get(groupId)
+}
+
+func (b *bot) loadCache() error {
+	bots, err := b.cacheClient.ListBots()
+	if err != nil {
+		return err
+	}
+
+	b.cache.Clear()
+	for _, bot := range bots {
+		b.cache.Set(bot.GroupId, bot.BotId)
+	}
 	return nil
 }

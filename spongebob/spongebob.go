@@ -8,7 +8,7 @@ import (
 	"github.com/dyolcekaj/groupme-spongebob-bot/groupme"
 )
 
-var okPrefixRxp = *regexp.MustCompile("ok (.*)")
+var okPrefixRxp = *regexp.MustCompile("^ok (.*)")
 
 var _ groupme.Command = &CurrentMessageSarcasm{}
 type CurrentMessageSarcasm struct {
