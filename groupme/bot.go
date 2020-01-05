@@ -49,7 +49,7 @@ type Command interface {
 }
 
 type CommandBot interface {
-	Handler() func(msg Message) error
+	Handler(msg Message) error
 }
 
 type CommandBotOptions struct {
@@ -105,11 +105,7 @@ type bot struct {
 	url    string
 }
 
-func (b *bot) Handler() func(msg Message) error {
-	return b.handler
-}
-
-func (b *bot) handler(msg Message) error {
+func (b *bot) Handler(msg Message) error {
 	msgText := fmt.Sprintf("%v", msg)
 	b.logger.Debugf("Received message: %s\n", msgText)
 

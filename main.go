@@ -57,7 +57,7 @@ func (a *App) Handler(ctx context.Context, request events.APIGatewayProxyRequest
 		}, nil
 	}
 
-	err = a.GroupMeBot.Handler()(m)
+	err = a.GroupMeBot.Handler(m)
 	if err != nil {
 		log.Error(err)
 		return events.APIGatewayProxyResponse{
