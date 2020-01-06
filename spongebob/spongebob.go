@@ -3,12 +3,29 @@ package spongebob
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"unicode"
 
 	"github.com/dyolcekaj/groupme-spongebob-bot/groupme"
 )
 
 var okPrefixRxp = *regexp.MustCompile("^[Oo][Kk] (.*)")
+var youKnowWhatPrefix = "you know what"
+
+var _ groupme.Command = &YouKnowWhatSarcasm{}
+type YouKnowWhatSarcasm struct {}
+
+func (c *YouKnowWhatSarcasm) Name() string {
+	return "CurrentMessageSarcasm"
+}
+
+func (c *YouKnowWhatSarcasm) Matches(msg groupme.Message) bool {
+	return len(msg.Text) > 0 && strings.HasPrefix(strings.ToLower(msg.Text), youKnowWhatPrefix)
+}
+
+func (c *YouKnowWhatSarcasm) Execute(msg groupme.Message, client groupme.Client) error {
+	return client.PostBotMessage(translateText(msg.Text))
+}
 
 var _ groupme.Command = &CurrentMessageSarcasm{}
 type CurrentMessageSarcasm struct {
