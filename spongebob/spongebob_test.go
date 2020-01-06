@@ -12,6 +12,15 @@ func TestTranslateText(t *testing.T) {
 	assertions.Equals(t, "tHiS iS a TeSt StRiNg", ret)
 }
 
+func TestYouKnowWhatSarcasm_Matches(t *testing.T) {
+	ykws := &YouKnowWhatSarcasm{}
+
+
+	assertions.Assert(t, ykws.Matches(groupme.Message{Text: "you know what bud"}), "Should have matched")
+	assertions.Assert(t, ykws.Matches(groupme.Message{Text: "YoU kNoW wHaT guy"}), "Should have matched")
+	assertions.Assert(t, !ykws.Matches(groupme.Message{Text: "u kno what friend"}), "Shouldn't have matched")
+}
+
 func TestPlainTextSarcasm_Matches(t *testing.T) {
 	pts := &CurrentMessageSarcasm{}
 

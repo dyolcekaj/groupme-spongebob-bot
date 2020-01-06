@@ -28,6 +28,7 @@ func main() {
 	cmds := []groupme.Command{
 		&spongebob.LastMessageSarcasm{},
 		&spongebob.CurrentMessageSarcasm{},
+		&spongebob.YouKnowWhatSarcasm{}, 
 	}
 
 	bot, err := groupme.NewCommandBot(botName, opts, cmds...)
