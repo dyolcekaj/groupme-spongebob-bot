@@ -90,9 +90,10 @@ func (c *LastMessageSarcasm) Execute(msg groupme.Message, client groupme.Client)
 
 	// Messages are sorted in descending time, don't need to sort
 	// Can worry about fetching more messages when not found later, 100 should
-	// be enough
+	// be enough. Only respond to user messages with no attachments as a
+	// quick and dirty default
 	for _, m := range ms {
-		if m.SenderId == uid {
+		if m.SenderType == groupme.UserSender && m.SenderId == uid && len(m.Attachments) == 0 {
 			return client.PostBotMessage(translateText(m.Text))
 		}
 	}
