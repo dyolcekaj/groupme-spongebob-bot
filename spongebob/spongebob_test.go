@@ -15,7 +15,6 @@ func TestTranslateText(t *testing.T) {
 func TestYouKnowWhatSarcasm_Matches(t *testing.T) {
 	ykws := &YouKnowWhatSarcasm{}
 
-
 	assertions.Assert(t, ykws.Matches(groupme.Message{Text: "you know what bud"}), "Should have matched")
 	assertions.Assert(t, ykws.Matches(groupme.Message{Text: "YoU kNoW wHaT guy"}), "Should have matched")
 	assertions.Assert(t, !ykws.Matches(groupme.Message{Text: "u kno what friend"}), "Shouldn't have matched")
@@ -41,7 +40,7 @@ func TestLastMessageSarcasm_Matches(t *testing.T) {
 				UserIds: []string{"123"},
 			},
 		},
-		Text:        "ok @user dude",
+		Text: "ok @user dude",
 	}), "should match")
 
 	assertions.Assert(t, !lms.Matches(groupme.Message{
@@ -51,6 +50,6 @@ func TestLastMessageSarcasm_Matches(t *testing.T) {
 				UserIds: []string{"123"},
 			},
 		},
-		Text:        "ok @user dude",
+		Text: "ok @user dude",
 	}), "should not match")
 }

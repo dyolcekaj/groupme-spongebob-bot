@@ -9,12 +9,8 @@ import (
 )
 
 type Client interface {
-	BotId() string
-	AccessToken() string
-
 	PostBotMessage(text string) error
 	GetGroupMessages(groupId string, params GroupMessageParams) ([]Message, error)
-	ListBots() ([]Bot, error)
 }
 
 type client struct {
@@ -128,38 +124,4 @@ func (c *client) GetGroupMessages(groupId string, params GroupMessageParams) ([]
 	}
 
 	return result.Response.Messages, nil
-}
-
-type Bot struct {
-	BotId   string `json:"bot_id"`
-	GroupId string `json:"group_id"`
-	Name    string `json:"name"`
-}
-
-func (c *client) ListBots() ([]Bot, error) {
-	req, err := http.NewRequest("GET", c.baseUrl+"/bots", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	q := req.URL.Query()
-	q.Set("token", c.accessToken)
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := c.c.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var result = struct {
-		Response []Bot
-	} {}
-
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return nil, err
-	}
-
-	return result.Response, nil
 }

@@ -61,9 +61,9 @@ type CommandBot interface {
 }
 
 type CommandBotOptions struct {
-	AccessToken   string
-	Logger        *log.Logger
-	BaseUrl       string
+	AccessToken string
+	Logger      *log.Logger
+	BaseUrl     string
 }
 
 func NewCommandBot(name string, opts CommandBotOptions, cmds ...Command) (CommandBot, error) {
@@ -93,7 +93,7 @@ func NewCommandBot(name string, opts CommandBotOptions, cmds ...Command) (Comman
 	}
 
 	b.cache = internal.NewCache()
-	b.cacheClient = NewClient("", b.url, b.accessToken)
+	b.cacheClient = internal.NewClient(b.url, b.accessToken)
 
 	err := b.loadCache()
 	if err != nil {
@@ -112,7 +112,7 @@ type bot struct {
 	url    string
 
 	cache       internal.BotIdCache
-	cacheClient Client
+	cacheClient internal.Client
 }
 
 func (b *bot) Handler(msg Message) error {

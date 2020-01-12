@@ -13,7 +13,8 @@ var okPrefixRxp = *regexp.MustCompile("^[Oo][Kk] (.*)")
 var youKnowWhatPrefix = "you know what"
 
 var _ groupme.Command = &YouKnowWhatSarcasm{}
-type YouKnowWhatSarcasm struct {}
+
+type YouKnowWhatSarcasm struct{}
 
 func (c *YouKnowWhatSarcasm) Name() string {
 	return "CurrentMessageSarcasm"
@@ -28,8 +29,8 @@ func (c *YouKnowWhatSarcasm) Execute(msg groupme.Message, client groupme.Client)
 }
 
 var _ groupme.Command = &CurrentMessageSarcasm{}
-type CurrentMessageSarcasm struct {
 
+type CurrentMessageSarcasm struct {
 }
 
 func (c *CurrentMessageSarcasm) Name() string {
@@ -45,8 +46,8 @@ func (c *CurrentMessageSarcasm) Execute(msg groupme.Message, client groupme.Clie
 }
 
 var _ groupme.Command = &LastMessageSarcasm{}
-type LastMessageSarcasm struct {
 
+type LastMessageSarcasm struct {
 }
 
 func (c *LastMessageSarcasm) Name() string {
@@ -82,7 +83,7 @@ func (c *LastMessageSarcasm) Execute(msg groupme.Message, client groupme.Client)
 	}
 
 	ms, err := client.GetGroupMessages(msg.GroupId, groupme.GroupMessageParams{
-		Limit:    100,
+		Limit: 100,
 	})
 	if err != nil {
 		return err
