@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const searchResultJson = `{
+const searchResultJSON = `{
 	"response": {
 		"count": 14476,
 		"messages": [{
@@ -37,5 +37,5 @@ const searchResultJson = `{
 func TestGroupMessageSearchUnmarshalling(t *testing.T) {
 	var result groupMessageSearchResult
 
-	assertions.Ok(t, json.Unmarshal([]byte(searchResultJson), &result))
+	assertions.Ok(t, json.Unmarshal([]byte(searchResultJSON), &result))
 }

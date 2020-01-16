@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const listBotJson = `{
+const listBotJSON = `{
 	"meta": {
 		"code": 200
 	},
@@ -34,5 +34,5 @@ func TestListBotUnmarshalling(t *testing.T) {
 		Response []Bot
 	}{}
 
-	assertions.Ok(t, json.Unmarshal([]byte(listBotJson), &result))
+	assertions.Ok(t, json.Unmarshal([]byte(listBotJSON), &result))
 }

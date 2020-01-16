@@ -14,46 +14,60 @@ var youKnowWhatPrefix = "you know what"
 
 var _ groupme.Command = &YouKnowWhatSarcasm{}
 
+// YouKnowWhatSarcasm responds sarcastically if a sentence is started
+// with the phrase "you know what"
 type YouKnowWhatSarcasm struct{}
 
+// Name returns name of this comnmand
 func (c *YouKnowWhatSarcasm) Name() string {
 	return "CurrentMessageSarcasm"
 }
 
+// Matches a GroupMe message
 func (c *YouKnowWhatSarcasm) Matches(msg groupme.Message) bool {
 	return len(msg.Text) > 0 && strings.HasPrefix(strings.ToLower(msg.Text), youKnowWhatPrefix)
 }
 
+// Execute a response to a matched GroupMe message
 func (c *YouKnowWhatSarcasm) Execute(msg groupme.Message, client groupme.Client) error {
 	return client.PostBotMessage(translateText(msg.Text))
 }
 
 var _ groupme.Command = &CurrentMessageSarcasm{}
 
+// CurrentMessageSarcasm responds sarcastically if a sentence starts with
+// "ok " but has no user mentions
 type CurrentMessageSarcasm struct {
 }
 
+// Name returns name of this comnmand
 func (c *CurrentMessageSarcasm) Name() string {
 	return "CurrentMessageSarcasm"
 }
 
+// Matches a GroupMe message
 func (c *CurrentMessageSarcasm) Matches(msg groupme.Message) bool {
 	return okPrefixRxp.Match([]byte(msg.Text)) && len(msg.Attachments) == 0
 }
 
+// Execute a response to a matched GroupMe message
 func (c *CurrentMessageSarcasm) Execute(msg groupme.Message, client groupme.Client) error {
 	return client.PostBotMessage(translateText(okPrefixRxp.FindStringSubmatch(msg.Text)[1]))
 }
 
 var _ groupme.Command = &LastMessageSarcasm{}
 
+// LastMessageSarcasm sarcastically repeats back whatever the mentioned user said last
+// if the current message starts with "ok @mention"
 type LastMessageSarcasm struct {
 }
 
+// Name returns name of this comnmand
 func (c *LastMessageSarcasm) Name() string {
 	return "LastMessageSarcasm"
 }
 
+// Matches a GroupMe message
 func (c *LastMessageSarcasm) Matches(msg groupme.Message) bool {
 	if !okPrefixRxp.Match([]byte(msg.Text)) || len(msg.Attachments) == 0 {
 		return false
@@ -69,6 +83,7 @@ func (c *LastMessageSarcasm) Matches(msg groupme.Message) bool {
 	return false
 }
 
+// Execute a response to a matched GroupMe message
 func (c *LastMessageSarcasm) Execute(msg groupme.Message, client groupme.Client) error {
 	var uid string
 	for _, a := range msg.Attachments {
@@ -82,7 +97,7 @@ func (c *LastMessageSarcasm) Execute(msg groupme.Message, client groupme.Client)
 		return fmt.Errorf("no user mentioned in message, can't search: %s", msg.Text)
 	}
 
-	ms, err := client.GetGroupMessages(msg.GroupId, groupme.GroupMessageParams{
+	ms, err := client.GetGroupMessages(msg.GroupID, groupme.GroupMessageParams{
 		Limit: 100,
 	})
 	if err != nil {
@@ -94,7 +109,7 @@ func (c *LastMessageSarcasm) Execute(msg groupme.Message, client groupme.Client)
 	// be enough. Only respond to user messages with no attachments as a
 	// quick and dirty default
 	for _, m := range ms {
-		if m.SenderType == groupme.UserSender && m.SenderId == uid && len(m.Attachments) == 0 {
+		if m.SenderType == groupme.UserSender && m.SenderID == uid && len(m.Attachments) == 0 {
 			return client.PostBotMessage(translateText(m.Text))
 		}
 	}

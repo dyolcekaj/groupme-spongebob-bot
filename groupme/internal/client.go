@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// Client for meta calls the bot might need
 type Client interface {
 	ListBots() ([]Bot, error)
 }
@@ -13,25 +14,27 @@ type client struct {
 	c           *http.Client
 	accessToken string
 
-	baseUrl string
+	baseURL string
 }
 
-func NewClient(baseUrl string, accessToken string) Client {
+// NewClient for making calls to GroupMe API
+func NewClient(baseURL string, accessToken string) Client {
 	return &client{
 		c:           &http.Client{},
 		accessToken: accessToken,
-		baseUrl:     baseUrl,
+		baseURL:     baseURL,
 	}
 }
 
+// Bot is a GroupMe bot defined by a user
 type Bot struct {
-	BotId   string `json:"bot_id"`
-	GroupId string `json:"group_id"`
+	BotID   string `json:"bot_id"`
+	GroupID string `json:"group_id"`
 	Name    string `json:"name"`
 }
 
 func (c *client) ListBots() ([]Bot, error) {
-	req, err := http.NewRequest("GET", c.baseUrl+"/bots", nil)
+	req, err := http.NewRequest("GET", c.baseURL+"/bots", nil)
 	if err != nil {
 		return nil, err
 	}

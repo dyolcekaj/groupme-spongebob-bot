@@ -40,10 +40,13 @@ func main() {
 	lambda.Start(a.Handler)
 }
 
+// App for receiving messages from APIGateway in Lambda and handing
+// them off to a CommandBot handler
 type App struct {
 	GroupMeBot groupme.CommandBot
 }
 
+// Handler catches APIGateway messages, unmarshalls them, and passes them off to a CommandBot
 func (a *App) Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	body := request.Body
 
