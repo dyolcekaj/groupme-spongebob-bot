@@ -42,8 +42,6 @@ func (c *simpleMapCache) Clear() {
 }
 
 type simpleMapCache struct {
-	baseUrl string
-
 	entries map[string]string
 	mutex   *sync.RWMutex
 }

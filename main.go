@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	botName = os.Getenv("GROPUME_BOT_NAME")
+	botName     = os.Getenv("GROPUME_BOT_NAME")
 	accessToken = os.Getenv("GROUPME_ACCESS_TOKEN")
 )
 
@@ -28,7 +28,7 @@ func main() {
 	cmds := []groupme.Command{
 		&spongebob.LastMessageSarcasm{},
 		&spongebob.CurrentMessageSarcasm{},
-		&spongebob.YouKnowWhatSarcasm{}, 
+		&spongebob.YouKnowWhatSarcasm{},
 	}
 
 	bot, err := groupme.NewCommandBot(botName, opts, cmds...)
