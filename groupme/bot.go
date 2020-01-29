@@ -143,7 +143,7 @@ func (b *bot) Handler(msg Message) error {
 		if cmd.Matches(msg) {
 			b.logger.Infof("Found command '%s', executing command on msg: %s\n", cmd.Name(), msgText)
 
-			botID, ok := b.findBotID(msg.GroupID)
+			bot, ok := b.findBot(msg.GroupID)
 			if !ok {
 				err := fmt.Errorf(
 					"no bot id found for command '%s' and groupd id '%s' on msg: %s",
@@ -153,7 +153,7 @@ func (b *bot) Handler(msg Message) error {
 				return err
 			}
 
-			c := NewClient(botID, b.url, b.accessToken)
+			c := newClient(bot.BotID, bot.GroupID, b.url, b.accessToken)
 			return cmd.Execute(msg, c)
 		}
 	}
@@ -162,9 +162,9 @@ func (b *bot) Handler(msg Message) error {
 	return nil
 }
 
-func (b *bot) findBotID(groupID string) (string, bool) {
-	if botID, ok := b.cache.Get(groupID); ok {
-		return botID, ok
+func (b *bot) findBot(groupID string) (internal.Bot, bool) {
+	if bot, ok := b.cache.Get(groupID); ok {
+		return bot, ok
 	}
 
 	// try, try again
@@ -183,7 +183,7 @@ func (b *bot) loadCache() error {
 
 	b.cache.Clear()
 	for _, bot := range bots {
-		b.cache.Set(bot.GroupID, bot.BotID)
+		b.cache.Set(bot.GroupID, bot)
 	}
 	return nil
 }

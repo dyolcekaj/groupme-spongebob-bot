@@ -97,9 +97,11 @@ func (c *LastMessageSarcasm) Execute(msg groupme.Message, client groupme.Client)
 		return fmt.Errorf("no user mentioned in message, can't search: %s", msg.Text)
 	}
 
-	ms, err := client.GetGroupMessages(msg.GroupID, groupme.GroupMessageParams{
-		Limit: 100,
-	})
+	ms, err := client.GetGroupMessages(
+		groupme.GroupMessageParams{
+			Limit: 100,
+		},
+	)
 	if err != nil {
 		return err
 	}

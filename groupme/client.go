@@ -12,22 +12,23 @@ import (
 // Command developer
 type Client interface {
 	PostBotMessage(text string) error
-	GetGroupMessages(groupID string, params GroupMessageParams) ([]Message, error)
+	GetGroupMessages(params GroupMessageParams) ([]Message, error)
 }
 
 type client struct {
 	c           *http.Client
 	botID       string
+	groupID     string
 	accessToken string
 
 	baseURL string
 }
 
-// NewClient returns a configured Client
-func NewClient(botID string, baseURL string, accessToken string) Client {
+func newClient(botID string, groupID string, baseURL string, accessToken string) Client {
 	return &client{
 		c:           &http.Client{},
 		botID:       botID,
+		groupID:     groupID,
 		accessToken: accessToken,
 		baseURL:     baseURL,
 	}
@@ -89,8 +90,8 @@ type groupMessageSearchResult struct {
 	} `json:"response"`
 }
 
-func (c *client) GetGroupMessages(groupID string, params GroupMessageParams) ([]Message, error) {
-	u := fmt.Sprintf("%s/groups/%s/messages", c.baseURL, groupID)
+func (c *client) GetGroupMessages(params GroupMessageParams) ([]Message, error) {
+	u := fmt.Sprintf("%s/groups/%s/messages", c.baseURL, c.groupID)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err

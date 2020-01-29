@@ -6,28 +6,28 @@ import (
 
 // BotIDCache for caching chat to bot relationships
 type BotIDCache interface {
-	Set(groupID string, botID string)
-	Get(groupID string) (botID string, ok bool)
+	Set(groupID string, bot Bot)
+	Get(groupID string) (bot Bot, ok bool)
 	Clear()
 }
 
 // NewCache returns new BotIDCache
 func NewCache() BotIDCache {
 	c := &simpleMapCache{
-		entries: make(map[string]string),
+		entries: make(map[string]Bot),
 		mutex:   &sync.RWMutex{},
 	}
 
 	return c
 }
 
-func (c *simpleMapCache) Set(groupID string, botID string) {
+func (c *simpleMapCache) Set(groupID string, bot Bot) {
 	c.mutex.Lock()
-	c.entries[groupID] = botID
+	c.entries[groupID] = bot
 	c.mutex.Unlock()
 }
 
-func (c *simpleMapCache) Get(groupID string) (string, bool) {
+func (c *simpleMapCache) Get(groupID string) (Bot, bool) {
 	c.mutex.RLock()
 	entry, ok := c.entries[groupID]
 	c.mutex.RUnlock()
@@ -44,6 +44,6 @@ func (c *simpleMapCache) Clear() {
 }
 
 type simpleMapCache struct {
-	entries map[string]string
+	entries map[string]Bot
 	mutex   *sync.RWMutex
 }
