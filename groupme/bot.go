@@ -8,9 +8,13 @@ import (
 	"strings"
 )
 
+// SenderType is type of message sender
 type SenderType string
+
+// AttachmentType is type of attachment on message
 type AttachmentType string
 
+// Defined SenderTypes and AttachmentTypes
 const (
 	UserSender SenderType = "user"
 	BotSender  SenderType = "bot"
@@ -21,51 +25,57 @@ const (
 	EmojiType    AttachmentType = "emoji"
 	SplitType    AttachmentType = "split"
 
-	DefaultUrl = "https://api.groupme.com/v3"
+	DefaultURL = "https://api.groupme.com/v3"
 )
 
+// Message sent during callback from GroupMe
 type Message struct {
 	Attachments []Attachment `json:"attachments"`
 	CreatedAt   int          `json:"created_at"`
-	GroupId     string       `json:"group_id"`
-	Id          string       `json:"id"`
+	GroupID     string       `json:"group_id"`
+	ID          string       `json:"id"`
 	Name        string       `json:"name"`
-	SenderId    string       `json:"sender_id"`
+	SenderID    string       `json:"sender_id"`
 	SenderType  SenderType   `json:"sender_type"`
-	SourceGuid  string       `json:"source_guid"`
+	SourceGUID  string       `json:"source_guid"`
 	System      bool         `json:"system"`
 	Text        string       `json:"text"`
-	UserId      string       `json:"user_id"`
+	UserID      string       `json:"user_id"`
 }
 
 func (m *Message) String() string {
 	return fmt.Sprintf(
 		"[createAt: %d, groupId: %s, id: %s, name: %s, senderId: %s, senderType: %s, text: %s, userId: %s]",
-		m.CreatedAt, m.GroupId, m.Id, m.Name, m.SenderId, m.SenderType, m.Text, m.UserId,
+		m.CreatedAt, m.GroupID, m.ID, m.Name, m.SenderID, m.SenderType, m.Text, m.UserID,
 	)
 }
 
+// Attachment that may/may not be on message
 type Attachment struct {
 	Type    AttachmentType `json:"type"`
 	UserIds []string       `json:"user_ids"`
 }
 
+// Command to match against and act upon GroupMe Messages
 type Command interface {
 	Name() string
 	Matches(msg Message) bool
 	Execute(msg Message, c Client) error
 }
 
+// CommandBot to handle Commands
 type CommandBot interface {
 	Handler(msg Message) error
 }
 
+// CommandBotOptions for configuring the bot
 type CommandBotOptions struct {
 	AccessToken string
 	Logger      *log.Logger
-	BaseUrl     string
+	BaseURL     string
 }
 
+// NewCommandBot returns a configured CommandBot
 func NewCommandBot(name string, opts CommandBotOptions, cmds ...Command) (CommandBot, error) {
 	b := &bot{name: name}
 
@@ -86,10 +96,10 @@ func NewCommandBot(name string, opts CommandBotOptions, cmds ...Command) (Comman
 		b.logger = log.New()
 	}
 
-	if len(opts.BaseUrl) > 0 {
-		b.url = strings.TrimRight(opts.BaseUrl, "/")
+	if len(opts.BaseURL) > 0 {
+		b.url = strings.TrimRight(opts.BaseURL, "/")
 	} else {
-		b.url = DefaultUrl
+		b.url = DefaultURL
 	}
 
 	b.cache = internal.NewCache()
@@ -111,7 +121,7 @@ type bot struct {
 	logger *log.Logger
 	url    string
 
-	cache       internal.BotIdCache
+	cache       internal.BotIDCache
 	cacheClient internal.Client
 }
 
@@ -133,17 +143,17 @@ func (b *bot) Handler(msg Message) error {
 		if cmd.Matches(msg) {
 			b.logger.Infof("Found command '%s', executing command on msg: %s\n", cmd.Name(), msgText)
 
-			botId, ok := b.findBotId(msg.GroupId)
+			bot, ok := b.findBot(msg.GroupID)
 			if !ok {
 				err := fmt.Errorf(
-					"No bot id found for command '%s' and groupd id '%s' on msg: %s\n",
-					cmd.Name(), msg.GroupId, msgText,
+					"no bot id found for command '%s' and groupd id '%s' on msg: %s",
+					cmd.Name(), msg.GroupID, msgText,
 				)
 				b.logger.Error(err)
 				return err
 			}
 
-			c := NewClient(botId, b.url, b.accessToken)
+			c := newClient(bot.BotID, bot.GroupID, b.url, b.accessToken)
 			return cmd.Execute(msg, c)
 		}
 	}
@@ -152,9 +162,9 @@ func (b *bot) Handler(msg Message) error {
 	return nil
 }
 
-func (b *bot) findBotId(groupId string) (string, bool) {
-	if botId, ok := b.cache.Get(groupId); ok {
-		return botId, ok
+func (b *bot) findBot(groupID string) (internal.Bot, bool) {
+	if bot, ok := b.cache.Get(groupID); ok {
+		return bot, ok
 	}
 
 	// try, try again
@@ -162,7 +172,7 @@ func (b *bot) findBotId(groupId string) (string, bool) {
 	if err != nil {
 		b.logger.Errorf("error reloading cache: %v", err)
 	}
-	return b.cache.Get(groupId)
+	return b.cache.Get(groupID)
 }
 
 func (b *bot) loadCache() error {
@@ -173,7 +183,7 @@ func (b *bot) loadCache() error {
 
 	b.cache.Clear()
 	for _, bot := range bots {
-		b.cache.Set(bot.GroupId, bot.BotId)
+		b.cache.Set(bot.GroupID, bot)
 	}
 	return nil
 }
