@@ -3,9 +3,10 @@ package groupme
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/dyolcekaj/groupme-spongebob-bot/groupme/internal"
 	log "github.com/sirupsen/logrus"
-	"strings"
 )
 
 // SenderType is type of message sender
@@ -139,19 +140,19 @@ func (b *bot) Handler(msg Message) error {
 		return nil
 	}
 
+	bot, ok := b.findBot(msg.GroupID)
+	if !ok {
+		err := fmt.Errorf(
+			"no bot id found for groupd id '%s' on msg: %s",
+			msg.GroupID, msgText,
+		)
+		b.logger.Error(err)
+		return err
+	}
+
 	for _, cmd := range b.commands {
 		if cmd.Matches(msg) {
 			b.logger.Infof("Found command '%s', executing command on msg: %s\n", cmd.Name(), msgText)
-
-			bot, ok := b.findBot(msg.GroupID)
-			if !ok {
-				err := fmt.Errorf(
-					"no bot id found for command '%s' and groupd id '%s' on msg: %s",
-					cmd.Name(), msg.GroupID, msgText,
-				)
-				b.logger.Error(err)
-				return err
-			}
 
 			c := newClient(bot.BotID, bot.GroupID, b.url, b.accessToken)
 			return cmd.Execute(msg, c)

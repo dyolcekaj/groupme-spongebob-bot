@@ -2,7 +2,6 @@ package internal
 
 import (
 	"encoding/json"
-	"github.com/dyolcekaj/groupme-spongebob-bot/assertions"
 	"testing"
 )
 
@@ -34,5 +33,7 @@ func TestListBotUnmarshalling(t *testing.T) {
 		Response []Bot
 	}{}
 
-	assertions.Ok(t, json.Unmarshal([]byte(listBotJSON), &result))
+	if err := json.Unmarshal([]byte(listBotJSON), &result); err != nil {
+		t.Errorf("exp no err, got %v", err)
+	}
 }

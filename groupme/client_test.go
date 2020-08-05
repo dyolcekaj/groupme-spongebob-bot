@@ -2,7 +2,6 @@ package groupme
 
 import (
 	"encoding/json"
-	"github.com/dyolcekaj/groupme-spongebob-bot/assertions"
 	"testing"
 )
 
@@ -37,5 +36,7 @@ const searchResultJSON = `{
 func TestGroupMessageSearchUnmarshalling(t *testing.T) {
 	var result groupMessageSearchResult
 
-	assertions.Ok(t, json.Unmarshal([]byte(searchResultJSON), &result))
+	if err := json.Unmarshal([]byte(searchResultJSON), &result); err != nil {
+		t.Errorf("exp no err, got %v", err)
+	}
 }

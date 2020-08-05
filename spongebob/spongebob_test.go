@@ -3,53 +3,145 @@ package spongebob
 import (
 	"testing"
 
-	"github.com/dyolcekaj/groupme-spongebob-bot/assertions"
 	"github.com/dyolcekaj/groupme-spongebob-bot/groupme"
 )
 
 func TestTranslateText(t *testing.T) {
-	ret := translateText("this is a test string")
-	assertions.Equals(t, "tHiS iS a TeSt StRiNg", ret)
+	testCases := []struct {
+		name, text, exp string
+	}{
+		{
+			name: "long string",
+			text: "this is a test string",
+			exp:  "tHiS iS a TeSt StRiNg",
+		},
+		{
+			name: "one char string",
+			text: "a",
+			exp:  "a",
+		},
+		{
+			name: "one uc char string",
+			text: "A",
+			exp:  "a",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			act := translateText(tc.text)
+			if act != tc.exp {
+				t.Errorf("exp %s, got %s", tc.exp, act)
+			}
+		})
+	}
 }
 
 func TestYouKnowWhatSarcasm_Matches(t *testing.T) {
-	ykws := &YouKnowWhatSarcasm{}
+	testCases := []struct {
+		name string
+		text string
+		exp  bool
+	}{
+		{
+			name: "lower case match",
+			text: "you know what bud",
+			exp:  true,
+		},
+		{
+			name: "mixed case match",
+			text: "YoU kNoW wHaT guy",
+			exp:  true,
+		},
+		{
+			name: "no match",
+			text: "u kno what friend",
+			exp:  false,
+		},
+	}
 
-	assertions.Assert(t, ykws.Matches(groupme.Message{Text: "you know what bud"}), "Should have matched")
-	assertions.Assert(t, ykws.Matches(groupme.Message{Text: "YoU kNoW wHaT guy"}), "Should have matched")
-	assertions.Assert(t, !ykws.Matches(groupme.Message{Text: "u kno what friend"}), "Shouldn't have matched")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			act := (&YouKnowWhatSarcasm{}).Matches(
+				groupme.Message{
+					Text: tc.text,
+				},
+			)
+			if act != tc.exp {
+				t.Errorf("exp %v, got %v. text: %s", tc.exp, act, tc.text)
+			}
+		})
+	}
 }
 
 func TestPlainTextSarcasm_Matches(t *testing.T) {
-	pts := &CurrentMessageSarcasm{}
+	testCases := []struct {
+		name string
+		text string
+		exp  bool
+	}{
+		{"match1", "ok this should match", true},
+		{"no match", "this should not match", false},
+		{"match2", "Ok this should match", true},
+		{"match3", "OK this should match", true},
+		{"match4", "oK this should match", true},
+		{"no match, only ok", "ok", false},
+	}
 
-	assertions.Assert(t, pts.Matches(groupme.Message{Text: "ok this should match"}), "Should have matched")
-	assertions.Assert(t, !pts.Matches(groupme.Message{Text: "this should not match"}), "Should not have matched")
-	assertions.Assert(t, pts.Matches(groupme.Message{Text: "Ok this should match"}), "Should have matched")
-	assertions.Assert(t, pts.Matches(groupme.Message{Text: "OK this should match"}), "Should have matched")
-	assertions.Assert(t, pts.Matches(groupme.Message{Text: "oK this should match"}), "Should have matched")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			act := (&CurrentMessageSarcasm{}).Matches(
+				groupme.Message{Text: tc.text},
+			)
+
+			if act != tc.exp {
+				t.Errorf("exp %v, got %v. text: %s", tc.exp, act, tc.text)
+			}
+		})
+	}
 }
 
 func TestLastMessageSarcasm_Matches(t *testing.T) {
-	lms := &LastMessageSarcasm{}
-
-	assertions.Assert(t, lms.Matches(groupme.Message{
-		Attachments: []groupme.Attachment{
-			{
-				Type:    groupme.MentionType,
-				UserIds: []string{"123"},
-			},
+	testCases := []struct {
+		name string
+		at   groupme.AttachmentType
+		uids []string
+		text string
+		exp  bool
+	}{
+		{
+			name: "match",
+			at:   groupme.MentionType,
+			uids: []string{"123"},
+			text: "ok @user dude",
+			exp:  true,
 		},
-		Text: "ok @user dude",
-	}), "should match")
-
-	assertions.Assert(t, !lms.Matches(groupme.Message{
-		Attachments: []groupme.Attachment{
-			{
-				Type:    groupme.LocationType,
-				UserIds: []string{"123"},
-			},
+		{
+			name: "no match, bad attachment",
+			at:   groupme.LocationType,
+			uids: []string{"123"},
+			text: "ok @user dude",
+			exp:  false,
 		},
-		Text: "ok @user dude",
-	}), "should not match")
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			act := (&LastMessageSarcasm{}).Matches(
+				groupme.Message{
+					Attachments: []groupme.Attachment{
+						{
+							Type:    tc.at,
+							UserIds: tc.uids,
+						},
+					},
+					Text: tc.text,
+				},
+			)
+
+			if act != tc.exp {
+				t.Errorf("exp %v, got %v", tc.exp, act)
+			}
+		})
+	}
 }
